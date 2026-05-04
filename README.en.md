@@ -6,6 +6,28 @@
 
 ---
 
+## Standalone Version
+
+This project also includes a **single-file Python version** (`kit_mcp_standalone.py`) with all components consolidated:
+- Enums, errors, and security utilities
+- Audit logging with JSON serialization
+- Configuration parsing and validation
+- Transport abstraction (SSH) with rate limiting
+- MCP server endpoint
+
+**Usage**:
+```bash
+python kit_mcp_standalone.py --host 10.0.0.1 --user admin --auth password --password secret
+```
+
+This is useful for:
+- Minimal deployments (single file to deploy)
+- Embedded environments
+- CI/CD pipelines where modularity is less important
+- Learning the full architecture in one file
+
+---
+
 ## Quick Start
 
 ```bash
