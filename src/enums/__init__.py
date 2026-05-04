@@ -38,7 +38,6 @@ class KeyAlgorithm(str, Enum):
     ED25519 = "ed25519"
     RSA     = "rsa"
     ECDSA   = "ecdsa"
-    DSA     = "dsa"
 
 
 # ─────────────────────────────────────────────

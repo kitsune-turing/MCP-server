@@ -77,7 +77,6 @@ class KeyAlgorithm(str, Enum):
     ED25519 = "ed25519"
     RSA     = "rsa"
     ECDSA   = "ecdsa"
-    DSA     = "dsa"
 
 
 class ConnectionState(str, Enum):
@@ -873,7 +872,6 @@ _PARAMIKO_KEY_LOADERS: dict[KeyAlgorithm, type[paramiko.PKey]] = {
     KeyAlgorithm.ED25519: paramiko.Ed25519Key,
     KeyAlgorithm.RSA: paramiko.RSAKey,
     KeyAlgorithm.ECDSA: paramiko.ECDSAKey,
-    KeyAlgorithm.DSA: paramiko.DSSKey,
 }
 
 _AUTO_LOADERS = list(_PARAMIKO_KEY_LOADERS.values())
