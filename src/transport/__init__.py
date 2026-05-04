@@ -122,7 +122,6 @@ _PARAMIKO_KEY_LOADERS: dict[KeyAlgorithm, type[paramiko.PKey]] = {
     KeyAlgorithm.ED25519 : paramiko.Ed25519Key,
     KeyAlgorithm.RSA     : paramiko.RSAKey,
     KeyAlgorithm.ECDSA   : paramiko.ECDSAKey,
-    KeyAlgorithm.DSA     : paramiko.DSSKey,
 }
 
 _AUTO_LOADERS = list(_PARAMIKO_KEY_LOADERS.values())  # try all when algo is unknown

@@ -64,7 +64,7 @@ docker run --rm -i \
 | `--password` | si `--auth password` | `$KIT_MCP_PASSWORD` | Contraseña de autenticación |
 | `--sudo-password` | opcional | `$KIT_MCP_SUDO_PASSWORD` | Contraseña para comandos sudo (separada de la contraseña de acceso) |
 | `--key` | si `--auth key_file` | — | Ruta a la clave privada |
-| `--key-algo` | | auto-detección | `ed25519` · `rsa` · `ecdsa` · `dsa` |
+| `--key-algo` | | auto-detección | `ed25519` · `rsa` · `ecdsa` |
 | `--timeout` | | `15` | Tiempo de espera de conexión (segundos) |
 | `--cmd-timeout` | | `120` | Tiempo de espera por comando (segundos) |
 | `--keepalive` | | `15` | Intervalo de keepalive SSH (0 = desactivado) |
