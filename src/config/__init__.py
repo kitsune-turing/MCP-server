@@ -31,6 +31,17 @@ from kit_mcp.errors import (
     MissingUserError,
     UnsupportedTransportError,
 )
+from kit_mcp.security import (
+    validate_hostname,
+    validate_username,
+    validate_port,
+    check_credential_leakage,
+)
+from kit_mcp.audit import get_audit_logger, AuditEventType, AuditSeverity
+
+import logging
+
+log = logging.getLogger("kit_mcp.config")
 
 
 # ─────────────────────────────────────────────
@@ -207,9 +218,29 @@ def parse_args(argv: list[str] | None = None) -> ServerConfig:
 
     Raises typed :class:`~kit_mcp.errors.ConfigError` sub-classes on
     validation failures.
+    
+    Security checks:
+    - ISO 27001/27002: Credential validation, hostname verification
+    - NIST: Input validation to prevent injection attacks
     """
     parser = _build_parser()
     ns     = parser.parse_args(argv)
+
+    # Security: Validate hostname
+    if not validate_hostname(ns.host):
+        raise MissingHostError(
+            f"Invalid hostname: {ns.host}. Must be valid FQDN or IP address."
+        )
+
+    # Security: Validate username
+    if not validate_username(ns.user):
+        raise MissingUserError(
+            f"Invalid username: {ns.user}. Use alphanumeric + _ (max 32 chars)."
+        )
+
+    # Security: Validate port
+    if not validate_port(ns.port if ns.port is not None else 22):
+        raise InvalidPortError("Port is out of valid range.")
 
     transport = TransportType(ns.transport)
 
@@ -219,6 +250,58 @@ def parse_args(argv: list[str] | None = None) -> ServerConfig:
     # Password: flag > env variable KIT_MCP_PASSWORD
     password = ns.password or os.environ.get("KIT_MCP_PASSWORD")
     sudo_password = ns.sudo_password or os.environ.get("KIT_MCP_SUDO_PASSWORD")
+
+    # Security: Check for credential leakage (both CLI and env set)
+    if check_credential_leakage(ns.password, "KIT_MCP_PASSWORD"):
+        log.warning(
+            "Credential set in both CLI flag and KIT_MCP_PASSWORD environment variable. "
+            "CLI flag will be used. Environment variable should be cleared."
+        )
+        # Audit this security event
+        audit = get_audit_logger()
+        audit.log_security_event(
+            host=ns.host,
+            port=port,
+            user=ns.user,
+            transport=transport.value,
+            event_type=AuditEventType.SECURITY_WARNING,
+            severity=AuditSeverity.MEDIUM,
+            detail="Password specified in both CLI flag and environment variable",
+        )
+
+    if check_credential_leakage(ns.sudo_password, "KIT_MCP_SUDO_PASSWORD"):
+        log.warning(
+            "Sudo password set in both CLI flag and KIT_MCP_SUDO_PASSWORD environment variable. "
+            "CLI flag will be used. Environment variable should be cleared."
+        )
+        # Audit this security event
+        audit = get_audit_logger()
+        audit.log_security_event(
+            host=ns.host,
+            port=port,
+            user=ns.user,
+            transport=transport.value,
+            event_type=AuditEventType.SECURITY_WARNING,
+            severity=AuditSeverity.MEDIUM,
+            detail="Sudo password specified in both CLI flag and environment variable",
+        )
+
+    # Security: Warn about --no-host-check
+    if ns.no_host_check:
+        log.warning(
+            "Host key verification disabled (--no-host-check). "
+            "This allows MITM attacks. Only use in development/testing."
+        )
+        audit = get_audit_logger()
+        audit.log_security_event(
+            host=ns.host,
+            port=port,
+            user=ns.user,
+            transport=transport.value,
+            event_type=AuditEventType.SECURITY_WARNING,
+            severity=AuditSeverity.HIGH,
+            detail="Host key verification disabled (--no-host-check)",
+        )
 
     # Name defaults to user@host
     name = ns.name or f"{ns.user}@{ns.host}"
