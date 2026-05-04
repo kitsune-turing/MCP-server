@@ -1,0 +1,56 @@
+name: kit-mcp
+
+# ─────────────────────────────────────────────
+#  docker compose up            → run server
+#  docker compose run tests     → run pytest
+#  docker compose run lint      → ruff + mypy
+# ─────────────────────────────────────────────
+
+services:
+
+  # ── Main MCP server ───────────────────────
+  server:
+    build:
+      context : .
+      target  : runtime
+    image: kit-mcp-server:latest
+    stdin_open: true
+    tty: false
+    volumes:
+      - type: bind
+        source: ${SSH_KEY_DIR:-~/.ssh}
+        target: /home/mcp/.ssh
+        read_only: true
+    environment:
+      KIT_MCP_PASSWORD: ${KIT_MCP_PASSWORD:-}
+    command: >
+      --host  ${KIT_MCP_HOST:-127.0.0.1}
+      --port  ${KIT_MCP_PORT:-22}
+      --user  ${KIT_MCP_USER:-pi}
+      --auth  ${KIT_MCP_AUTH:-key_file}
+      --key   ${KIT_MCP_KEY:-/home/mcp/.ssh/id_ed25519}
+      --transport ${KIT_MCP_TRANSPORT:-ssh}
+
+  # ── Test runner ───────────────────────────
+  tests:
+    build:
+      context : .
+      target  : builder
+    image: kit-mcp-builder:latest
+    working_dir: /build
+    volumes:
+      - ./src:/build/src
+      - ./tests:/build/tests
+      - ./pyproject.toml:/build/pyproject.toml
+    command: >
+      bash -c "pip install -e '.[dev]' -q && pytest"
+
+  # ── Linting / type-checking ───────────────
+  lint:
+    image: kit-mcp-builder:latest
+    working_dir: /build
+    volumes:
+      - ./src:/build/src
+      - ./pyproject.toml:/build/pyproject.toml
+    command: >
+      bash -c "pip install -e '.[dev]' -q && ruff check src && mypy src"
