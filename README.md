@@ -1,5 +1,7 @@
 # KIT-MCP
 
+🌐 **Español** · [English](README.en.md)
+
 Servidor [MCP](https://modelcontextprotocol.io) que permite a un asistente de IA (Claude Desktop, Claude Code u otro cliente MCP) operar un servidor remoto por **SSH** de forma controlada: ejecutar comandos, consultar el estado del sistema y leer o escribir archivos, con políticas de seguridad, redacción de secretos y auditoría.
 
 Todo el servidor está en un único archivo: `kit_mcp.py`.
